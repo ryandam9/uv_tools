@@ -15,7 +15,7 @@ to work with MCP docker servers.
 To use this, you need to have the following installed:
     - Docker
     - uv
-    - "ANTHROPIC_API_KEY" set
+    - "ANTHROPIC_API_KEY" environment variable set
 
 Sample run
 ==========
@@ -73,9 +73,13 @@ class MCPClient:
         # List available tools
         response = await self.session.list_tools()
         tools = response.tools
-        print("\nConnected to server with tools:", [tool.name for tool in tools])
+        print(
+            "\nConnected to server with tools:", [tool.name for tool in tools]
+        )
 
-    async def process_query(self, query: str, model: str, max_tokens: int) -> str:
+    async def process_query(
+        self, query: str, model: str, max_tokens: int
+    ) -> str:
         """Process a query using Claude and available tools"""
         messages = [{"role": "user", "content": query}]
 
@@ -119,7 +123,9 @@ class MCPClient:
 
                 # Continue conversation with tool results
                 if hasattr(content, "text") and content.text:
-                    messages.append({"role": "assistant", "content": content.text})
+                    messages.append(
+                        {"role": "assistant", "content": content.text}
+                    )
                 messages.append({"role": "user", "content": result.content})
 
                 # Get next response from Claude
