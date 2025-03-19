@@ -15,6 +15,7 @@ to work with MCP docker servers.
 To use this, you need to have the following installed:
     - Docker
     - uv
+    - "ANTHROPIC_API_KEY" set
 
 Sample run
 ==========
@@ -52,7 +53,9 @@ class MCPClient:
         args = ["run", "-i", "--rm", docker_image]
 
         server_params = StdioServerParameters(
-            command=command, args=args, env=None,
+            command=command,
+            args=args,
+            env=None,
         )
 
         stdio_transport = await self.exit_stack.enter_async_context(
@@ -70,9 +73,7 @@ class MCPClient:
         # List available tools
         response = await self.session.list_tools()
         tools = response.tools
-        print(
-            "\nConnected to server with tools:", [tool.name for tool in tools]
-        )
+        print("\nConnected to server with tools:", [tool.name for tool in tools])
 
     async def process_query(self, query: str, model: str, max_tokens: int) -> str:
         """Process a query using Claude and available tools"""
@@ -86,7 +87,6 @@ class MCPClient:
                 description=tool.description,
                 input_schema=tool.inputSchema,
             )
-
             for tool in response.tools
         ]
 
@@ -119,9 +119,7 @@ class MCPClient:
 
                 # Continue conversation with tool results
                 if hasattr(content, "text") and content.text:
-                    messages.append(
-                        {"role": "assistant", "content": content.text}
-                    )
+                    messages.append({"role": "assistant", "content": content.text})
                 messages.append({"role": "user", "content": result.content})
 
                 # Get next response from Claude
@@ -169,11 +167,21 @@ async def run_client(docker_image, model, max_tokens):
 
 
 @click.command()
-@click.argument("docker_image", required=True,)
-@click.option("--model", default="claude-3-7-sonnet-20250219",
-              help=f"Claude model to use (default: claude-3-7-sonnet-20250219)")
-@click.option("--max-tokens", default=1024, type=int,
-              help=f"Maximum tokens for Claude response (default: 1024)")
+@click.argument(
+    "docker_image",
+    required=True,
+)
+@click.option(
+    "--model",
+    default="claude-3-7-sonnet-20250219",
+    help="Claude model to use (default: claude-3-7-sonnet-20250219)",
+)
+@click.option(
+    "--max-tokens",
+    default=1024,
+    type=int,
+    help="Maximum tokens for Claude response (default: 1024)",
+)
 def main(docker_image, model, max_tokens):
     """MCP Client for connecting to Docker-based MCP servers.
 
